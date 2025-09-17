@@ -131,10 +131,7 @@
 
 <script>
     // --- Centralized Audio Node Tracking ---
-    // This part is no longer strictly necessary with the reload approach,
-    // but it's good practice to keep it for potential future debugging.
     window.activeAudioNodes = new Set(); 
-
     const trackedConstructors = [
         'Synth', 'MonoSynth', 'PolySynth', 'FMSynth', 'AMSynth', 'DuoSynth',
         'MembraneSynth', 'MetalSynth', 'PluckSynth', 'NoiseSynth',
@@ -142,7 +139,6 @@
         'AutoFilter', 'AutoPanner', 'Filter', 'Compressor', 'PingPongDelay',
         'LFO', 'Oscillator', 'Noise', 'BitCrusher', 'PitchShift', 'Sequence', 'Loop'
     ];
-
     trackedConstructors.forEach(className => {
         if (Tone[className]) {
             const originalConstructor = Tone[className];
@@ -173,16 +169,24 @@
         const synthTypeSelect = document.getElementById('synth-type-select');
 
         const stopAllSounds = () => {
-            // As per your suggestion, this is the most forceful way to stop all sounds.
-            // It reloads the entire application, destroying the current audio context
-            // and providing a clean slate.
+            // Create an object to hold the current state of all UI controls.
+            const currentState = {
+                selectedSound: sfxSelect.value,
+                volume: volumeSlider.value,
+                pitch: pitchSlider.value,
+                distortion: distortionSlider.value,
+                reverb: reverbSlider.value,
+                synthType: synthTypeSelect.value
+            };
+
+            // Save this state to localStorage before reloading.
+            localStorage.setItem('sfxMixerState', JSON.stringify(currentState));
+
+            // Reload the page to stop all audio.
             location.reload();
         };
 
         const playCodeFromTextarea = async () => {
-            // No need to call stopAllSounds() here anymore since the page will
-            // be fresh on every load, but we'll do it before playing a new sound
-            // just in case, to clear any potential lingering state.
             if (window.activeAudioNodes.size > 0) {
                  window.activeAudioNodes.forEach(node => node && !node.disposed && node.dispose());
                  window.activeAudioNodes.clear();
@@ -215,6 +219,9 @@
             }
         };
         
+        // --- On Page Load ---
+
+        // 1. Populate the sound list first.
         const soundNames = SoundDesigner.getSoundNames();
         soundNames.forEach(name => {
             const option = document.createElement('option');
@@ -223,6 +230,28 @@
             sfxSelect.appendChild(option);
         });
 
+        // 2. Check if a saved state exists from a "Stop" action.
+        const savedStateJSON = localStorage.getItem('sfxMixerState');
+        if (savedStateJSON) {
+            try {
+                const savedState = JSON.parse(savedStateJSON);
+                // Restore all control values.
+                sfxSelect.value = savedState.selectedSound;
+                volumeSlider.value = savedState.volume;
+                pitchSlider.value = savedState.pitch;
+                distortionSlider.value = savedState.distortion;
+                reverbSlider.value = savedState.reverb;
+                synthTypeSelect.value = savedState.synthType;
+                
+                // Important: Clean up the stored state so it's only used once.
+                localStorage.removeItem('sfxMixerState');
+            } catch (e) {
+                console.error("Failed to parse or restore saved state:", e);
+                localStorage.removeItem('sfxMixerState');
+            }
+        }
+
+        // 3. Set up all event listeners.
         playBtn.addEventListener('click', playCodeFromTextarea);
         stopBtn.addEventListener('click', stopAllSounds);
         sfxSelect.addEventListener('change', updateCodeDisplay);
@@ -238,6 +267,7 @@
             element.addEventListener('input', updateCodeDisplay);
         });
 
+        // 4. Update the code display to reflect the initial (or restored) state.
         updateCodeDisplay();
     });
 </script>
