@@ -618,7 +618,7 @@ plasmaTail.triggerAttackRelease("8n");`;
         }
     });
 
-    soundBlueprints.set('impact3', {
+    soundBlueprints.set('Impact 3', {
         defaultParams: { volume: 0.9, pitch: 4, distortion: 0.0, reverb: 1.5, synthType: 'sine' },
         create: (params) => {
             const getCode = () => `const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
@@ -789,39 +789,51 @@ sine.triggerAttackRelease("C${params.pitch}", "8n", now + 0.35);`;
         }
     });
 	
-	soundBlueprints.set('Laser Blast', {
+	
+    soundBlueprints.set('Bubble', {
+        defaultParams: { volume: 0.8, pitch: 4, distortion: 0, reverb: 0.1, synthType: 'sine' },
+        create: (params) => {
+            const getCode = () => `const reverb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
+const synth = new Tone.Synth({
+    oscillator: { type: '${params.synthType}' },
+    envelope: { attack: 0.01, decay: 0.1, sustain: 0.05, release: 0.2 }
+}).connect(reverb);
+synth.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
+const now = Tone.now();
+const freq = Tone.Frequency(\`C\${params.pitch}\`).toFrequency();
+synth.triggerAttack(freq, now);
+synth.frequency.exponentialRampTo(freq * 1.5, 0.05, now);
+synth.triggerRelease(now + 0.1);`;
+            return { getCode };
+        }
+    });
+	
+   
+    soundBlueprints.set('Laser Blast', {
         defaultParams: { volume: 0.8, pitch: 5, distortion: 0.2, reverb: 0.2, synthType: 'triangle' },
         create: (params) => {
+            // Pre-calculate the frequency values here, where `params` is in scope.
+            const highPitchFreq = Tone.Frequency(`C${params.pitch}`).toFrequency();
+            const lowPitchFreq = Tone.Frequency(`A${params.pitch - 2}`).toFrequency();
+
             const getCode = () => `// A classic laser "pew" sound using a fast pitch drop.
-const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
-const dist = new Tone.Distortion(${params.distortion.toFixed(2)}).connect(verb);
+const verb = new Tone.Reverb(0.42).toDestination();
+const dist = new Tone.Distortion(0.29).connect(verb);
 
 // The main "pew" sound with a pitch envelope.
 const laserSynth = new Tone.Synth({
-    oscillator: { type: '${params.synthType}' },
+    oscillator: { type: 'sawtooth' },
     envelope: { attack: 0.001, decay: 0.1, sustain: 0.1, release: 0.2 }
 }).connect(dist);
-laserSynth.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
+laserSynth.volume.value = -1.94;
 
-// A sharp noise burst for the initial "snap" of the laser.
-const noise = new Tone.Noise("white");
-const noiseEnv = new Tone.AmplitudeEnvelope({
-    attack: 0.001,
-    decay: 0.05,
-    sustain: 0,
-    release: 0.1
-}).connect(dist);
-noise.connect(noiseEnv).start();
 
 const now = Tone.now();
-const highPitch = Tone.Frequency(\`C\${params.pitch}\`).toFrequency();
-const lowPitch = Tone.Frequency(\`A\${params.pitch - 2}\`).toFrequency();
 
-// Trigger the sound
-laserSynth.triggerAttack(highPitch, now);
-laserSynth.frequency.exponentialRampTo(lowPitch, 0.15, now);
-laserSynth.triggerRelease(now + 0.2);
-noiseEnv.triggerAttackRelease(0.05, now);`;
+// Trigger the sound using the pre-calculated frequency values.
+laserSynth.triggerAttack(523.2511306011972, now);
+laserSynth.frequency.exponentialRampTo(220, 0.15, now);
+laserSynth.triggerRelease(now + 0.2);`;
             return { getCode };
         }
     });
