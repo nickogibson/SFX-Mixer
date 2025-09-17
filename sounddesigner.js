@@ -108,10 +108,10 @@ const synth = new Tone.MonoSynth({
     oscillator: { type: '${params.synthType}' },
     filterEnvelope: { attack: 0.1, decay: 0.5, sustain: 0.8, release: 2 }
 }).connect(chorus);
-synth.volume.value = 0.00;
+synth.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
 const now = Tone.now();
-synth.triggerAttack("C3", now);
-synth.frequency.rampTo("C7", 1.5, now + 0.5);
+synth.triggerAttack("C${params.pitch}", now);
+synth.frequency.rampTo("C${params.pitch + 4}", 1.5, now + 0.5);
 synth.triggerRelease(now + 2);`;
             return { getCode };
         }
@@ -793,6 +793,7 @@ sine.triggerAttackRelease("C${params.pitch}", "8n", now + 0.35);`;
     soundBlueprints.set('Bubble', {
         defaultParams: { volume: 0.8, pitch: 4, distortion: 0, reverb: 0.1, synthType: 'sine' },
         create: (params) => {
+            const freq = Tone.Frequency(`C${params.pitch}`).toFrequency();
             const getCode = () => `const reverb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
 const synth = new Tone.Synth({
     oscillator: { type: '${params.synthType}' },
@@ -800,7 +801,7 @@ const synth = new Tone.Synth({
 }).connect(reverb);
 synth.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
 const now = Tone.now();
-const freq = Tone.Frequency(\`C\${params.pitch}\`).toFrequency();
+const freq = ${freq};
 synth.triggerAttack(freq, now);
 synth.frequency.exponentialRampTo(freq * 1.5, 0.05, now);
 synth.triggerRelease(now + 0.1);`;
@@ -998,3 +999,4 @@ for (let i = 0; i < 8; i++) {
         }
     };
 })();
+
