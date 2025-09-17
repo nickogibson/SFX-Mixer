@@ -2,7 +2,7 @@
 A simple web tool for generating and customizing sound effects built with Tone.js  
 
 # Link
-You can try the live mixer here: https://nickogibson.github.io/sfx-mixer/  
+You can try the live mixer here: https://nickogibson.github.io/SFX-Mixer/  
 
 # How to Use:
 Select a Preset: Choose a base sound from the dropdown menu.  
