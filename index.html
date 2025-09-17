@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sci-Fi SFX Mixer</title>
+    <style>
+        :root {
+            --bg-color: #1a1e23;
+            --panel-color: #2a2f36;
+            --accent-color: #00aaff;
+            --text-color: #e0e6f0;
+            --label-color: #9ab;
+            --shadow-color: rgba(0,0,0,0.3);
+            --border-radius: 8px;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 2rem;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .mixer-container {
+            background: var(--panel-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            color: var(--accent-color);
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        .player-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        select {
+            flex-grow: 1;
+            padding: 0.8rem;
+            background: #3c424a;
+            color: var(--text-color);
+            border: 1px solid #4a5058;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+        button {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        #play-btn { background-color: var(--accent-color); color: white; }
+        #play-btn:hover { background-color: #0099e6; }
+        #stop-btn { background-color: #f44336; color: white; }
+        #stop-btn:hover { background-color: #e53935; }
+        .mixer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .control-group { display: flex; flex-direction: column; }
+        label { margin-bottom: 0.5rem; color: var(--label-color); font-size: 0.9rem; }
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px; background: #4a5058; outline: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-color); cursor: pointer; }
+        .synth-type select { width: 100%; }
+        .code-output { position: relative; }
+        textarea { width: 100%; height: 250px; background-color: #16181c; color: #c3d0e3; border: 1px solid #4a5058; border-radius: var(--border-radius); padding: 1rem; font-family: "Fira Code", monospace; font-size: 0.85rem; resize: vertical; box-sizing: border-box; }
+        #copy-btn { position: absolute; top: 10px; right: 10px; background: #4a5058; color: var(--text-color); padding: 0.5rem 1rem; }
+        #copy-btn:hover { background: #5a6068; }
+    </style>
+</head>
+<body>
+
+<div class="mixer-container">
+    <h1>Sci-Fi SFX Mixer</h1>
+    <div class="player-controls">
+        <select id="sfx-select"></select>
+        <button id="play-btn">Play Code</button>
+        <button id="stop-btn">Stop</button>
+    </div>
+    <div class="mixer-grid">
+        <div class="control-group">
+            <label for="volume-slider">Volume</label>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8">
+        </div>
+        <div class="control-group">
+            <label for="pitch-slider">Pitch (Octave)</label>
+            <input type="range" id="pitch-slider" min="1" max="7" step="1" value="5">
+        </div>
+        <div class="control-group">
+            <label for="distortion-slider">Distortion</label>
+            <input type="range" id="distortion-slider" min="0" max="1" step="0.01" value="0">
+        </div>
+        <div class="control-group">
+            <label for="reverb-slider">Reverb</label>
+            <input type="range" id="reverb-slider" min="0.01" max="5" step="0.01" value="0.5">
+        </div>
+        <div class="control-group synth-type">
+            <label for="synth-type-select">Synth Type</label>
+            <select id="synth-type-select">
+                <option value="triangle">Triangle</option>
+                <option value="sine">Sine</option>
+                <option value="square">Square</option>
+                <option value="sawtooth">Sawtooth</option>
+            </select>
+        </div>
+    </div>
+    <div class="code-output">
+        <label>Generated Code (Editable)</label>
+        <textarea id="code-textarea" spellcheck="false">Select a sound to generate a code preset.</textarea>
+        <button id="copy-btn">Copy</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+
+<script>
+    // --- Centralized Audio Node Tracking ---
+    // This part is no longer strictly necessary with the reload approach,
+    // but it's good practice to keep it for potential future debugging.
+    window.activeAudioNodes = new Set(); 
+
+    const trackedConstructors = [
+        'Synth', 'MonoSynth', 'PolySynth', 'FMSynth', 'AMSynth', 'DuoSynth',
+        'MembraneSynth', 'MetalSynth', 'PluckSynth', 'NoiseSynth',
+        'Reverb', 'Distortion', 'Chorus', 'Phaser', 'Tremolo', 'Vibrato',
+        'AutoFilter', 'AutoPanner', 'Filter', 'Compressor', 'PingPongDelay',
+        'LFO', 'Oscillator', 'Noise', 'BitCrusher', 'PitchShift', 'Sequence', 'Loop'
+    ];
+
+    trackedConstructors.forEach(className => {
+        if (Tone[className]) {
+            const originalConstructor = Tone[className];
+            const wrapper = function(...args) {
+                const instance = new originalConstructor(...args);
+                window.activeAudioNodes.add(instance);
+                return instance;
+            };
+            Object.assign(wrapper, originalConstructor);
+            Tone[className] = wrapper;
+        }
+    });
+</script>
+
+<script src="sounddesigner.js"></script> 
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sfxSelect = document.getElementById('sfx-select');
+        const playBtn = document.getElementById('play-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const codeTextarea = document.getElementById('code-textarea');
+
+        const volumeSlider = document.getElementById('volume-slider');
+        const pitchSlider = document.getElementById('pitch-slider');
+        const distortionSlider = document.getElementById('distortion-slider');
+        const reverbSlider = document.getElementById('reverb-slider');
+        const synthTypeSelect = document.getElementById('synth-type-select');
+
+        const stopAllSounds = () => {
+            // As per your suggestion, this is the most forceful way to stop all sounds.
+            // It reloads the entire application, destroying the current audio context
+            // and providing a clean slate.
+            location.reload();
+        };
+
+        const playCodeFromTextarea = async () => {
+            // No need to call stopAllSounds() here anymore since the page will
+            // be fresh on every load, but we'll do it before playing a new sound
+            // just in case, to clear any potential lingering state.
+            if (window.activeAudioNodes.size > 0) {
+                 window.activeAudioNodes.forEach(node => node && !node.disposed && node.dispose());
+                 window.activeAudioNodes.clear();
+                 Tone.Transport.stop();
+                 Tone.Transport.cancel();
+            }
+
+            await SoundDesigner.init();
+            const userCode = codeTextarea.value;
+            try {
+                new Function(userCode)();
+            } catch (error) {
+                console.error("Error executing custom code:", error);
+                codeTextarea.value = `// --- ERROR! --- \n// ${error.message}\n// Check console for details.\n// ----------------\n\n` + userCode;
+            }
+        };
+
+        const updateCodeDisplay = () => {
+            const soundName = sfxSelect.value;
+            const params = {
+                volume: parseFloat(volumeSlider.value),
+                pitch: parseInt(pitchSlider.value),
+                distortion: parseFloat(distortionSlider.value),
+                reverb: parseFloat(reverbSlider.value),
+                synthType: synthTypeSelect.value
+            };
+            const tempSound = SoundDesigner.create(soundName, params);
+            if (tempSound && tempSound.getCode) {
+                codeTextarea.value = tempSound.getCode();
+            }
+        };
+        
+        const soundNames = SoundDesigner.getSoundNames();
+        soundNames.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            sfxSelect.appendChild(option);
+        });
+
+        playBtn.addEventListener('click', playCodeFromTextarea);
+        stopBtn.addEventListener('click', stopAllSounds);
+        sfxSelect.addEventListener('change', updateCodeDisplay);
+
+        copyBtn.addEventListener('click', () => {
+            codeTextarea.select();
+            document.execCommand('copy');
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+        });
+        
+        [volumeSlider, pitchSlider, distortionSlider, reverbSlider, synthTypeSelect].forEach(element => {
+            element.addEventListener('input', updateCodeDisplay);
+        });
+
+        updateCodeDisplay();
+    });
+</script>
+</body>
+</html>
+
