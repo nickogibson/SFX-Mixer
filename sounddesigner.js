@@ -108,10 +108,10 @@ const synth = new Tone.MonoSynth({
     oscillator: { type: '${params.synthType}' },
     filterEnvelope: { attack: 0.1, decay: 0.5, sustain: 0.8, release: 2 }
 }).connect(chorus);
-synth.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
+synth.volume.value = 0.00;
 const now = Tone.now();
-synth.triggerAttack("C${params.pitch}", now);
-synth.frequency.rampTo("C${params.pitch + 4}", 1.5, now + 0.5);
+synth.triggerAttack("C3", now);
+synth.frequency.rampTo("C7", 1.5, now + 0.5);
 synth.triggerRelease(now + 2);`;
             return { getCode };
         }
@@ -215,7 +215,7 @@ fm.triggerAttackRelease("F${params.pitch}", "16n", now + 0.1);`;
         }
     });
     
-    soundBlueprints.set('Notification 3', {
+    soundBlueprints.set('Tech Jingle', {
         defaultParams: { volume: 0.7, pitch: 5, distortion: 0, reverb: 1.0, synthType: 'square' },
         create: (params) => {
             const getCode = () => `const reverb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
@@ -313,27 +313,7 @@ setTimeout(() => synth.triggerRelease(), 160);`;
         }
     });
 
-    soundBlueprints.set('Drum-Snare', {
-        defaultParams: { volume: 0.9, pitch: 2, distortion: 0, reverb: 1.5, synthType: 'sine' },
-        create: (params) => {
-            const getCode = () => `const reverb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
-const distortion = new Tone.Distortion(${params.distortion.toFixed(2)}).connect(reverb);
-const thud = new Tone.MembraneSynth({
-    pitchDecay: 0.02, octaves: 6,
-    envelope: { attack: 0.001, decay: 0.3, release: 0.2 }
-}).connect(distortion);
-thud.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
-const clank = new Tone.MetalSynth({
-    resonance: 3000, harmonicity: 3, modulationIndex: 10,
-    envelope: { attack: 0.001, decay: 0.2, release: 0.2 }
-}).connect(distortion);
-clank.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
-const now = Tone.now();
-thud.triggerAttackRelease("C${params.pitch}", "8n", now);
-clank.triggerAttackRelease("16n", now + 0.05);`;
-            return { getCode };
-        }
-    });
+ 
 
     soundBlueprints.set('Transformer', {
         defaultParams: { volume: 0.8, pitch: 2, distortion: 0.1, reverb: 3.0, synthType: 'sawtooth' },
@@ -436,26 +416,6 @@ lfo.start();
         }
     });
 
-    soundBlueprints.set('Photon Torpedo', {
-        defaultParams: { volume: 0.9, pitch: 3, distortion: 0.1, reverb: 1.5, synthType: 'square' },
-        create: (params) => {
-            const getCode = () => `const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
-const dist = new Tone.Distortion(${params.distortion.toFixed(2)}).connect(verb);
-const synth = new Tone.MonoSynth({
-    oscillator: { type: '${params.synthType}' },
-    envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 1 }
-}).connect(dist);
-synth.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
-synth.triggerAttackRelease("A${params.pitch - 1}", 0.2);
-setTimeout(() => synth.triggerAttackRelease("C${params.pitch + 2}", 0.5), 100);
-const noiseFilter = new Tone.Filter(100, 'lowpass').connect(dist);
-const noise = new Tone.Noise('brown').connect(noiseFilter);
-noise.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
-noise.start();
-setTimeout(() => noise.stop(), 200);`;
-            return { getCode };
-        }
-    });
 
     soundBlueprints.set('Energy Burst', {
         defaultParams: { volume: 0.8, pitch: 4, distortion: 0.4, reverb: 0.5, synthType: 'sine' },
@@ -581,24 +541,8 @@ setTimeout(() => metalSynth.triggerAttackRelease("16n"), 50);`;
         }
     });
 
-    // --- MORE NEW SOUNDS ---
 
-    soundBlueprints.set('Gravity Well', {
-        defaultParams: { volume: 0.8, pitch: 4, distortion: 0.1, reverb: 2.0, synthType: 'triangle' },
-        create: (params) => {
-            const getCode = () => `const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
-const dist = new Tone.Distortion(${params.distortion.toFixed(2)}).connect(verb);
-const synth = new Tone.PolySynth({
-    oscillator: { type: '${params.synthType}' }
-}).connect(dist);
-synth.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
-const now = Tone.now();
-synth.triggerAttack("A${params.pitch}", now);
-synth.set({ "detune": -1200 });
-synth.toFrequency("A${params.pitch - 2}", 2);`;
-            return { getCode };
-        }
-    });
+
 
     soundBlueprints.set('Crystal', {
         defaultParams: { volume: 0.8, pitch: 5, distortion: 0.0, reverb: 1.5, synthType: 'sine' },
@@ -616,7 +560,7 @@ crystal.triggerAttackRelease("G${params.pitch}", "4n");`;
         }
     });
 
-    soundBlueprints.set('Servo', {
+    soundBlueprints.set('Impact 2', {
         defaultParams: { volume: 0.8, pitch: 3, distortion: 0.1, reverb: 0.2, synthType: 'sine' },
         create: (params) => {
             const getCode = () => `const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
@@ -674,40 +618,21 @@ plasmaTail.triggerAttackRelease("8n");`;
         }
     });
 
-    soundBlueprints.set('Tentacle Whip', {
+    soundBlueprints.set('impact3, {
         defaultParams: { volume: 0.9, pitch: 4, distortion: 0.0, reverb: 1.5, synthType: 'sine' },
         create: (params) => {
             const getCode = () => `const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
-const tentacle = new Tone.MembraneSynth({
+const impact = new Tone.MembraneSynth({
     pitchDecay: 0.1,
     octaves: 8,
     envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.1 }
 }).connect(verb);
-tentacle.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
-tentacle.triggerAttackRelease("A${params.pitch}", "32n");`;
+impact.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
+impact.triggerAttackRelease("A${params.pitch}", "32n");`;
             return { getCode };
         }
     });
 
-    soundBlueprints.set('EMP Burst', {
-        defaultParams: { volume: 0.9, pitch: 4, distortion: 0.2, reverb: 0.25, synthType: 'sine' },
-        create: (params) => {
-            const getCode = () => `const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
-const dist = new Tone.Distortion(${params.distortion.toFixed(2)}).connect(verb);
-const bp = new Tone.Filter({ type: "bandpass", frequency: 400, Q: 10 }).connect(dist);
-const crush = new Tone.BitCrusher(4).connect(bp);
-const ns = new Tone.NoiseSynth({
-    noise: { type: "white" },
-    envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.08 }
-}).connect(crush);
-ns.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
-const now = Tone.now();
-bp.frequency.rampTo(3200, 0.12);
-bp.frequency.rampTo(200, 0.28);
-ns.triggerAttackRelease("32n", now);`;
-            return { getCode };
-        }
-    });
     
     soundBlueprints.set('Cloak Engage', {
         defaultParams: { volume: 0.8, pitch: 5, distortion: 0.1, reverb: 0.35, synthType: 'sawtooth' },
@@ -769,7 +694,7 @@ metal.frequency.rampTo(${300 * Math.pow(2, params.pitch - 3)}, 0.5);`;
         }
     });
     
-    soundBlueprints.set('Radar Ping', {
+    soundBlueprints.set('Falling object', {
         defaultParams: { volume: 0.8, pitch: 5, distortion: 0, reverb: 0.35, synthType: 'sine' },
         create: (params) => {
             const getCode = () => `const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
@@ -833,7 +758,7 @@ ps.triggerAttackRelease(\`B\${p}\`, "8n", now + 0.16);`;
         }
     });
 
-    soundBlueprints.set('Turret Rotate', {
+    soundBlueprints.set('Notification 4', {
         defaultParams: { volume: 0.8, pitch: 5, distortion: 0, reverb: 0.15, synthType: 'sine' },
         create: (params) => {
             const getCode = () => `const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
@@ -850,7 +775,7 @@ for (let i = 0; i < 4; i++) {
         }
     });
 
-    soundBlueprints.set('Reactor Alarm', {
+    soundBlueprints.set('Knock Knock', {
         defaultParams: { volume: 0.9, pitch: 3, distortion: 0.1, reverb: 0.2, synthType: 'sine' },
         create: (params) => {
             const getCode = () => `const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
@@ -860,6 +785,43 @@ sine.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
 const now = Tone.now();
 sine.triggerAttackRelease("C${params.pitch}", "8n", now);
 sine.triggerAttackRelease("C${params.pitch}", "8n", now + 0.35);`;
+            return { getCode };
+        }
+    });
+	
+	soundBlueprints.set('Laser Blast', {
+        defaultParams: { volume: 0.8, pitch: 5, distortion: 0.2, reverb: 0.2, synthType: 'triangle' },
+        create: (params) => {
+            const getCode = () => `// A classic laser "pew" sound using a fast pitch drop.
+const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
+const dist = new Tone.Distortion(${params.distortion.toFixed(2)}).connect(verb);
+
+// The main "pew" sound with a pitch envelope.
+const laserSynth = new Tone.Synth({
+    oscillator: { type: '${params.synthType}' },
+    envelope: { attack: 0.001, decay: 0.1, sustain: 0.1, release: 0.2 }
+}).connect(dist);
+laserSynth.volume.value = ${Tone.gainToDb(params.volume).toFixed(2)};
+
+// A sharp noise burst for the initial "snap" of the laser.
+const noise = new Tone.Noise("white");
+const noiseEnv = new Tone.AmplitudeEnvelope({
+    attack: 0.001,
+    decay: 0.05,
+    sustain: 0,
+    release: 0.1
+}).connect(dist);
+noise.connect(noiseEnv).start();
+
+const now = Tone.now();
+const highPitch = Tone.Frequency(\`C\${params.pitch}\`).toFrequency();
+const lowPitch = Tone.Frequency(\`A\${params.pitch - 2}\`).toFrequency();
+
+// Trigger the sound
+laserSynth.triggerAttack(highPitch, now);
+laserSynth.frequency.exponentialRampTo(lowPitch, 0.15, now);
+laserSynth.triggerRelease(now + 0.2);
+noiseEnv.triggerAttackRelease(0.05, now);`;
             return { getCode };
         }
     });
@@ -881,7 +843,7 @@ noise.start();
         }
     });
 
-    soundBlueprints.set('Energy Shield Hit', {
+    soundBlueprints.set('Notification 3', {
         defaultParams: { volume: 0.9, pitch: 2, distortion: 0.1, reverb: 0.5, synthType: 'sine' },
         create: (params) => {
             const getCode = () => `const reverb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
