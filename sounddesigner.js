@@ -618,7 +618,7 @@ plasmaTail.triggerAttackRelease("8n");`;
         }
     });
 
-    soundBlueprints.set('impact3, {
+    soundBlueprints.set('impact3', {
         defaultParams: { volume: 0.9, pitch: 4, distortion: 0.0, reverb: 1.5, synthType: 'sine' },
         create: (params) => {
             const getCode = () => `const verb = new Tone.Reverb(${params.reverb.toFixed(2)}).toDestination();
